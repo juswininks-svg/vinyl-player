@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonoPress Vault — Personal Audio Deck</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Space Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        canvas: '#F3F3F3',
+                        ink: '#111111',
+                        ash: '#737373',
+                        taupeWidget: '#7A6B6E',
+                        taupePill: '#938487',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F3F3F3;
+            color: #111111;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Realistic Vinyl Grooves & Specular Sheen */
+        .vinyl-platter {
+            background:
+                radial-gradient(circle at center,
+                    #141414 0%,
+                    #141414 27%,
+                    #2a2a2a 27.5%,
+                    #111111 28.5%,
+                    #1b1b1b 34%,
+                    #0e0e0e 39%,
+                    #222222 45%,
+                    #101010 51%,
+                    #1e1e1e 57%,
+                    #0d0d0d 63%,
+                    #242424 69%,
+                    #111111 75%,
+                    #1c1c1c 82%,
+                    #0c0c0c 90%,
+                    #2b2b2b 97%,
+                    #090909 100%
+                );
+            box-shadow:
+                0 22px 45px rgba(0, 0, 0, 0.35),
+                inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+        }
+
+        .vinyl-sheen {
+            background: conic-gradient(
+                from 35deg,
+                rgba(255, 255, 255, 0.0) 0deg,
+                rgba(255, 255, 255, 0.22) 28deg,
+                rgba(255, 255, 255, 0.0) 62deg,
+                rgba(255, 255, 255, 0.0) 180deg,
+                rgba(255, 255, 255, 0.18) 210deg,
+                rgba(255, 255, 255, 0.0) 245deg,
+                rgba(255, 255, 255, 0.0) 360deg
+            );
+            pointer-events: none;
+        }
+
+        @keyframes spinVinyl {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .vinyl-spinning {
+            animation: spinVinyl 4.5s linear infinite;
+        }
+
+        .vinyl-paused {
+            animation-play-state: paused;
+        }
+
+        /* Tonearm Smooth Pivot */
+        .tonearm-assembly {
+            transform-origin: 36px 36px;
+            transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .tonearm-resting {
+            transform: rotate(-26deg);
+        }
+
+        .tonearm-engaged {
+            transform: rotate(3deg);
+        }
+
+        /* Editorial Metallic Pill & Gradient Bar */
+        .metallic-pill {
+            background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 52%, #111111 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+        }
+
+        .bottom-gradient-bar {
+            background: linear-gradient(90deg, #111111 0%, #3d3d3d 48%, #9e9e9e 82%, #e5e5e5 100%);
+        }
+
+        /* Custom Range Sliders */
+        input[type="range"].studio-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: #D4D4D4;
+            border-radius: 999px;
+            outline: none;
+        }
+
+        input[type="range"].studio-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #111111;
+            cursor: pointer;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+            transition: transform 0.15s ease;
+        }
+
+        input[type="range"].studio-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* Frosted iOS Squircle Widget (Inspired by Ref 1) */
+        .ios-frosted-card {
+            background: linear-gradient(145deg, rgba(126, 110, 113, 0.94), rgba(108, 94, 97, 0.96));
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            box-shadow:
+                0 20px 40px -12px rgba(17, 17, 17, 0.25),
+                inset 0 1px 1px rgba(255, 255, 255, 0.22);
+        }
+
+        .ios-frosted-pill {
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            transition: all 0.18s ease;
+        }
+
+        .ios-frosted-pill:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .ios-frosted-pill:active {
+            transform: scale(0.97);
+        }
+
+        /* Clean Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CCCCCC;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #999999;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-ink selection:text-white">
+
+    <!-- Non-blocking Toast Banner -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 -translate-y-3">
+        <div class="bg-ink text-white px-4 py-2 rounded-full shadow-lg text-xs font-medium tracking-wide flex items-center gap-2">
+            <span id="toast-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="toast-text">Saved to library</span>
+        </div>
+    </div>
+
+    <!-- Main Editorial Container -->
+    <div id="drop-surface" class="w-full max-w-[1260px] mx-auto px-4 sm:px-8 py-6 sm:py-8 flex-1 flex flex-col justify-between relative">
+
+        <!-- Drag & Drop Overlay -->
+        <div id="drag-overlay" class="hidden fixed inset-4 z-40 bg-white/90 backdrop-blur-md border-2 border-dashed border-ink rounded-3xl flex flex-col items-center justify-center pointer-events-none">
+            <div class="w-14 h-14 rounded-full bg-ink text-white flex items-center justify-center text-xl mb-3">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+            </div>
+            <p class="text-xl font-semibold tracking-tight text-ink">Drop Audio Files to Save in Vault</p>
+            <p class="text-xs text-ash mt-1">MP3, WAV, M4A, OGG, FLAC • Saved automatically for future sessions</p>
+        </div>
+
+        <!-- Top Editorial Navigation Bar -->
+        <header class="w-full flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-black/10">
+            <!-- Left Minimal Icons (Matching Ref 2 top-left trio) -->
+            <div class="flex items-center gap-3">
+                <button id="toggle-drawer-btn" class="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-ink transition" title="Toggle Folder Library">
+                    <i class="fa-solid fa-bars-staggered text-sm"></i>
+                </button>
+                <button id="toggle-widget-focus-btn" class="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-ink transition" title="Focus Frosted Card View">
+                    <i class="fa-regular fa-square text-sm"></i>
+                </button>
+                <button id="sync-local-dir-btn" class="w-9 h-9 rounded-full hover:bg-black/5 flex items-center justify-center text-ink transition" title="Link Local Device Folder (Backup Export)">
+                    <i class="fa-regular fa-folder-open text-sm"></i>
+                </button>
+                <span class="hidden sm:inline-block text-[11px] font-mono uppercase tracking-widest text-ash ml-2">
+                    Edition 04 / Offline Vault
+                </span>
+            </div>
+
+            <!-- Right Editorial Tag & Download HTML Action -->
+            <div class="flex items-center gap-2.5">
+                <label for="audio-file-input" class="cursor-pointer bg-white hover:bg-neutral-100 active:scale-95 text-ink border border-black/20 text-xs font-medium px-4 py-2 rounded-full transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-plus text-[11px]"></i>
+                    <span>Upload Songs</span>
+                </label>
+                <input id="audio-file-input" type="file" accept="audio/*" multiple class="hidden">
+
+                <button id="download-html-btn" class="metallic-pill hover:opacity-90 active:scale-95 text-white text-xs font-medium px-4 py-2 rounded-full transition flex items-center gap-2">
+                    <i class="fa-solid fa-code text-[11px]"></i>
+                    <span>Download HTML</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Center Split Workspace (Left: Editorial Controls & iOS Frosted Card | Spine: Dots & Chevrons | Right: Turntable & Folders) -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-4 py-6 items-start flex-1">
+
+            <!-- LEFT COLUMN (5 cols): Editorial Header, Frosted iOS Widget Card, Pill Controls & Transport -->
+            <section class="lg:col-span-5 flex flex-col gap-5 pr-0 lg:pr-4">
+                
+                <!-- Title & Subtitle -->
+                <div class="flex items-end justify-between">
+                    <div>
+                        <p class="text-[11px] font-mono uppercase tracking-widest text-ash mb-1" id="active-folder-label">Folder / All Tracks</p>
+                        <h1 class="text-3xl sm:text-4xl font-normal tracking-tight text-ink leading-none">Studio Deck</h1>
+                    </div>
+                    <button id="edit-artwork-btn" class="text-[11px] font-medium text-ash hover:text-ink underline underline-offset-4 transition" title="Upload custom cover image for current song">
+                        Change Cover
+                    </button>
+                    <input id="cover-file-input" type="file" accept="image/*" class="hidden">
+                </div>
+
+                <!-- FLOATING iOS-STYLE FROSTED SQUIRCLE MUSIC WIDGET (Inspired by Image 1) -->
+                <div class="w-full flex justify-center sm:justify-start">
+                    <div class="ios-frosted-card w-full max-w-[340px] rounded-[34px] p-5 text-white select-none transition-all duration-300">
+                        <!-- Top Row: Square Artwork + Top-Right Music Note Icon -->
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div class="relative w-[116px] h-[116px] rounded-[20px] overflow-hidden bg-black/25 shadow-md shrink-0 group">
+                                <img id="widget-cover-img" alt="Track Cover" class="w-full h-full object-cover">
+                                <label for="cover-file-input" class="cursor-pointer absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center text-[10px] font-medium tracking-wide text-white gap-1">
+                                    <i class="fa-solid fa-camera text-sm"></i>
+                                    <span>Edit Art</span>
+                                </label>
+                            </div>
+
+                            <!-- Top-right crisp Apple-style eighth-note icon -->
+                            <div class="pt-1 pr-1 opacity-95">
+                                <svg class="w-8 h-8 fill-current text-white" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M19 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6zM9 17c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V9h6V5H11v12.55c-.59-.34-1.27-.55-2-.55z" opacity="0"/>
+                                    <path d="M18.5 3.5L9 5.6v10.62A3.49 3.49 0 0 0 7.5 16C5.57 16 4 17.34 4 19s1.57 3 3.5 3 3.5-1.34 3.5-3V9.55l7-1.56v6.23A3.49 3.49 0 0 0 16.5 14c-1.93 0-3.5 1.34-3.5 3s1.57 3 3.5 3 3.5-1.34 3.5-3V4.5c0-.62-.57-1.1-1.5-1z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Track Title + Explicit Badge + Favorite Star -->
+                        <div class="mb-4">
+                            <div class="flex items-center gap-2">
+                                <h2 id="widget-title" class="text-[19px] font-semibold tracking-tight leading-snug truncate max-w-[215px]">
+                                    Midnight Tape 01
+                                </h2>
+                                <!-- Toggleable Clean/Explicit Badge -->
+                                <button id="toggle-explicit-btn" title="Toggle Tag Badge" class="w-[18px] h-[18px] rounded-[4px] bg-white/25 hover:bg-white/35 text-[10px] font-bold flex items-center justify-center shrink-0 transition">
+                                    H
+                                </button>
+                                <!-- Toggleable Favorite Star -->
+                                <button id="toggle-fav-btn" title="Favorite Track" class="text-white/50 hover:text-white text-sm transition shrink-0">
+                                    <i id="fav-star-icon" class="fa-solid fa-star"></i>
+                                </button>
+                            </div>
+                            <p id="widget-artist" class="text-[15px] text-white/75 font-normal truncate mt-0.5">
+                                Studio Archive
+                            </p>
+                        </div>
+
+                        <!-- Large Rounded Frosted Pill Play/Pause Button (Matches Image 1) -->
+                        <button id="widget-play-btn" class="ios-frosted-pill w-[178px] h-[48px] rounded-full flex items-center justify-center gap-2.5 text-white font-semibold text-[16px] shadow-sm">
+                            <i id="widget-play-icon" class="fa-solid fa-play text-base"></i>
+                            <span id="widget-play-label">Play</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Minimal Editorial Pill Action Buttons (Matching Ref 2 "Back / More" dual pill row) -->
+                <div class="flex items-center gap-2 pt-1">
+                    <button id="prev-btn" class="px-5 py-1.5 rounded-full bg-white hover:bg-neutral-100 active:scale-95 border border-black/25 text-ink text-xs font-medium transition">
+                        Previous
+                    </button>
+                    <button id="next-btn" class="px-5 py-1.5 rounded-full bg-ink hover:bg-neutral-800 active:scale-95 text-white text-xs font-medium transition">
+                        Next Track
+                    </button>
+                    <button id="shuffle-btn" class="w-8 h-8 rounded-full bg-white hover:bg-neutral-100 border border-black/20 text-ash text-xs flex items-center justify-center transition" title="Shuffle">
+                        <i class="fa-solid fa-shuffle"></i>
+                    </button>
+                    <button id="repeat-btn" class="w-8 h-8 rounded-full bg-white hover:bg-neutral-100 border border-black/20 text-ash text-xs flex items-center justify-center transition" title="Repeat Mode">
+                        <i class="fa-solid fa-repeat"></i>
+                    </button>
+                </div>
+
+                <!-- Scrubber & Time Readout -->
+                <div class="bg-white/80 border border-black/10 rounded-2xl p-3.5 flex flex-col gap-2">
+                    <div class="flex items-center justify-between text-[11px] font-mono text-ash">
+                        <span id="current-time">0:00</span>
+                        <span class="uppercase tracking-wider text-[10px]" id="playback-status-text">Ready</span>
+                        <span id="total-duration">0:00</span>
+                    </div>
+                    <input id="seek-slider" type="range" min="0" max="100" value="0" step="0.1" class="studio-slider w-full cursor-pointer">
+
+                    <!-- Volume & Quick Assign Folder -->
+                    <div class="flex items-center justify-between gap-3 pt-1">
+                        <div class="flex items-center gap-2 w-32">
+                            <button id="mute-btn" class="text-xs text-ink hover:text-ash w-5 text-left">
+                                <i id="volume-icon" class="fa-solid fa-volume-high"></i>
+                            </button>
+                            <input id="volume-slider" type="range" min="0" max="1" step="0.02" value="0.85" class="studio-slider w-full cursor-pointer">
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[11px] text-ash">Save to:</span>
+                            <select id="assign-folder-select" class="bg-canvas border border-black/15 rounded-full px-2.5 py-1 text-[11px] font-medium text-ink outline-none cursor-pointer">
+                                <option value="all">All Tracks</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Gradient Now-Playing Strip (Inspired by Image 2 bottom bar) -->
+                <div class="bottom-gradient-bar w-full h-11 rounded-md px-4 flex items-center justify-between text-white shadow-sm">
+                    <span id="strip-track-label" class="text-xs sm:text-sm font-medium tracking-tight truncate">
+                        Midnight Tape 01 • Studio Archive
+                    </span>
+                    <span class="text-[10px] font-mono uppercase tracking-widest text-ink bg-white/85 px-2 py-0.5 rounded-full shrink-0 ml-2" id="queue-counter">
+                        1 / 1
+                    </span>
+                </div>
+            </section>
+
+            <!-- CENTER VERTICAL SPINE NAVIGATION (1 col - Inspired by Image 2 center chevrons & dots) -->
+            <div class="hidden lg:flex lg:col-span-1 flex-col items-center justify-between h-[520px] py-4 select-none">
+                <button id="spine-up-btn" class="w-8 h-8 rounded-full hover:bg-black/5 flex items-center justify-center text-ink transition active:scale-90" title="Previous Track">
+                    <i class="fa-solid fa-chevron-up text-sm"></i>
+                </button>
+
+                <!-- Dynamic Vertical Dots Representing Tracks in Current Folder -->
+                <div id="spine-dots-container" class="flex flex-col items-center gap-2.5 my-auto max-h-[340px] overflow-y-auto py-2 px-1">
+                    <!-- Dots populated via JS -->
+                </div>
+
+                <button id="spine-down-btn" class="w-8 h-8 rounded-full hover:bg-black/5 flex items-center justify-center text-ink transition active:scale-90" title="Next Track">
+                    <i class="fa-solid fa-chevron-down text-sm"></i>
+                </button>
+            </div>
+
+            <!-- RIGHT COLUMN (6 cols): Realistic Monochrome Vinyl Turntable + Custom Folder Vault -->
+            <section class="lg:col-span-6 flex flex-col gap-5 pl-0 lg:pl-2">
+                
+                <!-- Turntable Chassis (Inspired by Image 2 right-side turntable) -->
+                <div class="bg-white border border-black/15 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-ash">Direct-Drive Platter // 33⅓ RPM</span>
+                        <span id="storage-badge" class="text-[10px] font-mono text-ink bg-canvas px-2.5 py-0.5 rounded-full border border-black/10">
+                            Vault Synced
+                        </span>
+                    </div>
+
+                    <!-- Turntable Plinth & Platter -->
+                    <div class="relative w-full max-w-[390px] aspect-square mx-auto bg-[#E8E8E8] rounded-xl border border-black/20 p-4 sm:p-5 shadow-inner flex items-center justify-center">
+                        
+                        <!-- Top-left Strobe Dial -->
+                        <div class="absolute top-3.5 left-3.5 w-8 h-8 rounded-full bg-gradient-to-br from-neutral-200 to-neutral-500 border border-black/30 shadow flex items-center justify-center">
+                            <div class="w-4 h-4 rounded-full bg-neutral-800"></div>
+                        </div>
+
+                        <!-- Bottom-left Power / Speed Indicator -->
+                        <div class="absolute bottom-3.5 left-3.5 flex items-center gap-1.5 bg-neutral-900 text-white px-2 py-1 rounded text-[9px] font-mono">
+                            <span id="turntable-led" class="w-1.5 h-1.5 rounded-full bg-neutral-500 transition-colors"></span>
+                            <span>33</span>
+                        </div>
+
+                        <!-- Spinning Vinyl Disc (Click to Play/Pause) -->
+                        <div id="vinyl-disc" title="Click vinyl to Play / Pause" class="vinyl-platter vinyl-paused relative w-[84%] h-[84%] rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-[0.99]">
+                            <!-- Specular Light Reflection -->
+                            <div class="vinyl-sheen absolute inset-0 rounded-full"></div>
+
+                            <!-- Center Record Label -->
+                            <div class="relative w-[35%] h-[35%] rounded-full bg-[#F5F5F5] border-4 border-neutral-800 overflow-hidden flex items-center justify-center shadow-inner">
+                                <img id="vinyl-label-img" alt="Vinyl Center" class="w-full h-full object-cover opacity-90">
+                                <!-- Spindle Hole -->
+                                <div class="absolute w-3 h-3 rounded-full bg-[#E8E8E8] border border-black/40 z-10"></div>
+                            </div>
+                        </div>
+
+                        <!-- Animated Tonearm Assembly (Right side of plinth) -->
+                        <div id="tonearm" class="tonearm-assembly tonearm-resting absolute top-3 right-3 w-[72px] h-[250px] pointer-events-none z-20">
+                            <svg viewBox="0 0 72 250" class="w-full h-full drop-shadow-md">
+                                <!-- Gimbal Base -->
+                                <circle cx="36" cy="36" r="22" fill="#262626" stroke="#111" stroke-width="2"/>
+                                <circle cx="36" cy="36" r="14" fill="#D4D4D4" stroke="#525252" stroke-width="1.5"/>
+                                <circle cx="36" cy="36" r="5" fill="#171717"/>
+                                <!-- Counterweight -->
+                                <rect x="27" y="4" width="18" height="14" rx="2" fill="#404040"/>
+                                <!-- S-Curved Metallic Arm Tube -->
+                                <path d="M36 50 L36 135 Q36 155 24 175 L16 198" fill="none" stroke="#1F1F1F" stroke-width="4.5" stroke-linecap="round"/>
+                                <path d="M36 50 L36 135 Q36 155 24 175 L16 198" fill="none" stroke="#A3A3A3" stroke-width="1.5" stroke-linecap="round"/>
+                                <!-- Headshell & Cartridge -->
+                                <g transform="translate(14, 196) rotate(24)">
+                                    <rect x="-5" y="0" width="10" height="24" rx="2" fill="#111111"/>
+                                    <rect x="-3" y="22" width="6" height="6" fill="#737373"/>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Right Pitch Fader Slider Decoration -->
+                        <div class="absolute right-3 bottom-4 h-20 w-3 bg-neutral-300 border border-black/20 rounded-full flex items-center justify-center">
+                            <div class="w-4 h-2.5 bg-neutral-800 rounded-sm shadow"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CUSTOMIZED FOLDER & SONG LIBRARY VAULT -->
+                <div id="library-panel" class="bg-white border border-black/15 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
+                    
+                    <!-- Header + Create New Custom Folder -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h2 class="text-base font-bold tracking-tight uppercase text-ink flex items-center gap-2">
+                                <span>Personal Archive</span>
+                                <i class="fa-solid fa-tower-broadcast text-xs"></i>
+                            </h2>
+                            <p class="text-[11px] text-ash">Songs & custom folders stay saved on your device across sessions.</p>
+                        </div>
+
+                        <button id="new-folder-toggle-btn" class="px-3 py-1.5 rounded-full bg-canvas hover:bg-neutral-200 border border-black/15 text-ink text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-plus text-[11px]"></i>
+                            <span>New Folder</span>
+                        </button>
+                    </div>
+
+                    <!-- Inline New Folder Creation Form -->
+                    <form id="new-folder-form" class="hidden flex items-center gap-2 bg-canvas p-2 rounded-xl border border-black/15">
+                        <input id="new-folder-input" type="text" maxlength="28" placeholder="Folder name (e.g. Night Drive, Chill)..." class="flex-1 bg-white border border-black/15 rounded-lg px-3 py-1.5 text-xs text-ink outline-none focus:border-ink">
+                        <button type="submit" class="px-3.5 py-1.5 rounded-lg bg-ink text-white text-xs font-medium hover:bg-neutral-800 transition">
+                            Create
+                        </button>
+                        <button type="button" id="cancel-folder-btn" class="px-2.5 py-1.5 rounded-lg text-xs text-ash hover:text-ink">
+                            Cancel
+                        </button>
+                    </form>
+
+                    <!-- Custom Folder Pills Strip -->
+                    <div id="folders-bar" class="flex items-center gap-1.5 overflow-x-auto pb-1">
+                        <!-- Folder pills injected here -->
+                    </div>
+
+                    <!-- Search Filter within Current Folder -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass text-[11px] text-ash absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input id="search-input" type="text" placeholder="Filter songs in this folder..." class="w-full bg-canvas border border-black/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-ink outline-none focus:border-black/30">
+                    </div>
+
+                    <!-- Saved Songs List -->
+                    <div id="song-list" class="flex flex-col divide-y divide-black/5 max-h-[240px] overflow-y-auto pr-1">
+                        <!-- Song rows populated dynamically -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Minimal Footer -->
+        <footer class="w-full pt-4 border-t border-black/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-ash">
+            <span>MonoPress Vault — Local IndexedDB Audio Persistence</span>
+            <span>Tip: Press <kbd class="px-1.5 py-0.5 bg-white border border-black/15 rounded text-ink font-mono text-[10px]">Space</kbd> to Play / Pause</span>
+        </footer>
+    </div>
+
+    <!-- Hidden HTML5 Audio Engine -->
+    <audio id="audio-engine" preload="metadata"></audio>
+
+    <script>
+        /**
+         * MonoPress Vault
+         * Persistent Offline Music Player with Custom Folders (IndexedDB),
+         * Realistic Monochrome Vinyl Turntable, Frosted iOS Widget Card,
+         * and One-Click Standalone HTML Download.
+         */
+
+        // --- IndexedDB Configuration ---
+        const DB_NAME = 'MonoPressVaultDB';
+        const DB_VERSION = 1;
+        const STORE_SONGS = 'songs';
+        const STORE_FOLDERS = 'folders';
+
+        let db = null;
+
+        // --- Application State ---
+        const state = {
+            folders: [],          // [{ id, name, createdAt }]
+            songs: [],            // [{ id, title, artist, folderId, explicit, favorite, coverDataUrl, audioBlob, isBuiltIn }]
+            activeFolderId: 'all',
+            currentSongId: null,
+            isPlaying: false,
+            isShuffle: false,
+            repeatMode: 'all',    // 'off' | 'all' | 'one'
+            searchQuery: '',
+            activeObjectUrl: null,
+            localDirectoryHandle: null
+        };
+
+        // --- DOM References ---
+        const audio = document.getElementById('audio-engine');
+        const audioFileInput = document.getElementById('audio-file-input');
+        const coverFileInput = document.getElementById('cover-file-input');
+        const dropSurface = document.getElementById('drop-surface');
+        const dragOverlay = document.getElementById('drag-overlay');
+
+        // Frosted Widget Elements
+        const widgetCoverImg = document.getElementById('widget-cover-img');
+        const widgetTitle = document.getElementById('widget-title');
+        const widgetArtist = document.getElementById('widget-artist');
+        const widgetPlayBtn = document.getElementById('widget-play-btn');
+        const widgetPlayIcon = document.getElementById('widget-play-icon');
+        const widgetPlayLabel = document.getElementById('widget-play-label');
+        const toggleExplicitBtn = document.getElementById('toggle-explicit-btn');
+        const toggleFavBtn = document.getElementById('toggle-fav-btn');
+        const favStarIcon = document.getElementById('fav-star-icon');
+
+        // Turntable & Editorial Elements
+        const vinylDisc = document.getElementById('vinyl-disc');
+        const vinylLabelImg = document.getElementById('vinyl-label-img');
+        const tonearm = document.getElementById('tonearm');
+        const turntableLed = document.getElementById('turntable-led');
+        const stripTrackLabel = document.getElementById('strip-track-label');
+        const queueCounter = document.getElementById('queue-counter');
+        const activeFolderLabel = document.getElementById('active-folder-label');
+        const spineDotsContainer = document.getElementById('spine-dots-container');
+
+        // Transport & Sliders
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const repeatBtn = document.getElementById('repeat-btn');
+        const seekSlider = document.getElementById('seek-slider');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalDurationEl = document.getElementById('total-duration');
+        const playbackStatusText = document.getElementById('playback-status-text');
+        const volumeSlider = document.getElementById('volume-slider');
+        const muteBtn = document.getElementById('mute-btn');
+        const volumeIcon = document.getElementById('volume-icon');
+
+        // Folder & Library Elements
+        const foldersBar = document.getElementById('folders-bar');
+        const songListEl = document.getElementById('song-list');
+        const assignFolderSelect = document.getElementById('assign-folder-select');
+        const newFolderToggleBtn = document.getElementById('new-folder-toggle-btn');
+        const newFolderForm = document.getElementById('new-folder-form');
+        const newFolderInput = document.getElementById('new-folder-input');
+        const cancelFolderBtn = document.getElementById('cancel-folder-btn');
+        const searchInput = document.getElementById('search-input');
+
+        // Top Bar Actions
+        const downloadHtmlBtn = document.getElementById('download-html-btn');
+        const syncLocalDirBtn = document.getElementById('sync-local-dir-btn');
+        const toggleDrawerBtn = document.getElementById('toggle-drawer-btn');
+        const libraryPanel = document.getElementById('library-panel');
+
+        // --- Toast Helper ---
+        let toastTimer = null;
+        function showToast(msg, isAlert = false) {
+            const toast = document.getElementById('toast');
+            const dot = document.getElementById('toast-dot');
+            document.getElementById('toast-text').textContent = msg;
+            dot.className = isAlert ? 'w-2 h-2 rounded-full bg-amber-400' : 'w-2 h-2 rounded-full bg-emerald-400';
+            toast.classList.remove('opacity-0', '-translate-y-3');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-3');
+            }, 2600);
+        }
+
+        // --- Generate Editorial Cover Artwork Data URL ---
+        function generateEditorialCover(title, seedIndex = 0) {
+            const c = document.createElement('canvas');
+            c.width = 400;
+            c.height = 400;
+            const ctx = c.getContext('2d');
+
+            const palettes = [
+                ['#1c191a', '#8c3b4a', '#e8d8da'],
+                ['#18181b', '#52525b', '#f4f4f5'],
+                ['#272022', '#7a5c61', '#ebe3e5'],
+                ['#141414', '#3f3f46', '#d4d4d8'],
+            ];
+            const pal = palettes[Math.abs(seedIndex) % palettes.length];
+
+            const grad = ctx.createLinearGradient(0, 0, 400, 400);
+            grad.addColorStop(0, pal[2]);
+            grad.addColorStop(0.55, pal[1]);
+            grad.addColorStop(1, pal[0]);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 400, 400);
+
+            // Subtle Swiss geometric circles
+            ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(200, 200, 130, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(200, 200, 68, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Subtle grain texture
+            for (let i = 0; i < 3500; i++) {
+                ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+                ctx.fillRect(Math.random() * 400, Math.random() * 400, 2, 2);
+            }
+
+            // Editorial Typography Stamp
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '700 26px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            const label = (title || 'ARCHIVE').slice(0, 16).toUpperCase();
+            ctx.fillText(label, 200, 208);
+
+            ctx.font = '400 11px monospace';
+            ctx.fillStyle = 'rgba(255,255,255,0.75)';
+            ctx.fillText('MONOPRESS // MASTER TAPE', 200, 232);
+
+            return c.toDataURL('image/png');
+        }
+
+        // --- Synthesize Built-in Ambient Demo WAV Blob so Player Works Immediately ---
+        function createBuiltInDemoWavBlob() {
+            const sampleRate = 22050;
+            const durationSec = 14;
+            const numSamples = sampleRate * durationSec;
+            const buffer = new ArrayBuffer(44 + numSamples * 2);
+            const view = new DataView(buffer);
+
+            const writeStr = (offset, str) => {
+                for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+            };
+
+            writeStr(0, 'RIFF');
+            view.setUint32(4, 36 + numSamples * 2, true);
+            writeStr(8, 'WAVE');
+            writeStr(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeStr(36, 'data');
+            view.setUint32(40, numSamples * 2, true);
+
+            // Warm lo-fi Rhodes chord progression (Fmaj7 -> Em7 -> Dm7 -> Cmaj7)
+            const chords = [
+                [174.61, 220.00, 261.63, 329.63],
+                [164.81, 196.00, 246.94, 293.66],
+                [146.83, 174.61, 220.00, 261.63],
+                [130.81, 164.81, 196.00, 246.94],
+            ];
+
+            for (let i = 0; i < numSamples; i++) {
+                const t = i / sampleRate;
+                const chordIdx = Math.floor((t / durationSec) * chords.length) % chords.length;
+                const chord = chords[chordIdx];
+                const localT = (t % (durationSec / chords.length));
+                const env = Math.min(1, localT * 6) * Math.exp(-localT * 0.45);
+
+                let sig = 0;
+                for (let n = 0; n < chord.length; n++) {
+                    const vibrato = 1 + 0.002 * Math.sin(2 * Math.PI * 4.5 * t);
+                    sig += Math.sin(2 * Math.PI * chord[n] * vibrato * t) * 0.22;
+                    sig += Math.sin(2 * Math.PI * chord[n] * 2 * t) * 0.04;
+                }
+                // Subtle warm vinyl crackle
+                const crackle = (Math.random() - 0.5) * 0.015;
+                const sample = Math.max(-1, Math.min(1, sig * env + crackle));
+                view.setInt16(44 + i * 2, sample * 32767, true);
+            }
+
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        // --- IndexedDB Initialization & CRUD ---
+        function openVaultDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains(STORE_FOLDERS)) {
+                        database.createObjectStore(STORE_FOLDERS, { keyPath: 'id' });
+                    }
+                    if (!database.objectStoreNames.contains(STORE_SONGS)) {
+                        database.createObjectStore(STORE_SONGS, { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        function dbGetAll(storeName) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function dbPut(storeName, item) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const req = store.put(item);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function dbDelete(storeName, key) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const req = store.delete(key);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        // --- Load Saved Folders & Songs on Startup ---
+        async function hydrateVault() {
+            await openVaultDB();
+            let folders = await dbGetAll(STORE_FOLDERS);
+            let songs = await dbGetAll(STORE_SONGS);
+
+            // Seed default custom folders if brand new
+            if (folders.length === 0) {
+                const defaults = [
+                    { id: 'folder-night', name: 'Late Night', createdAt: Date.now() },
+                    { id: 'folder-favs', name: 'Heavy Rotation', createdAt: Date.now() + 1 },
+                ];
+                for (const f of defaults) {
+                    await dbPut(STORE_FOLDERS, f);
+                }
+                folders = defaults;
+            }
+
+            // Seed built-in demo track if vault has zero songs
+            if (songs.length === 0) {
+                const demoTrack = {
+                    id: 'demo-track-01',
+                    title: 'Midnight Tape 01',
+                    artist: 'Studio Archive',
+                    folderId: 'folder-night',
+                    explicit: false,
+                    favorite: true,
+                    coverDataUrl: generateEditorialCover('Midnight Tape', 0),
+                    audioBlob: createBuiltInDemoWavBlob(),
+                    createdAt: Date.now()
+                };
+                await dbPut(STORE_SONGS, demoTrack);
+                songs = [demoTrack];
+            }
+
+            state.folders = folders.sort((a, b) => a.createdAt - b.createdAt);
+            state.songs = songs.sort((a, b) => a.createdAt - b.createdAt);
+
+            renderFolders();
+            renderSongList();
+
+            if (state.songs.length > 0) {
+                loadSongById(state.songs[0].id, false);
+            }
+        }
+
+        // --- Parse Filename into Clean Title & Artist ---
+        function parseAudioFilename(filename) {
+            const clean = filename.replace(/\.[^/.]+$/, '').replace(/_/g, ' ').trim();
+            if (clean.includes(' - ')) {
+                const parts = clean.split(' - ');
+                return {
+                    artist: parts[0].trim() || 'Local Artist',
+                    title: parts.slice(1).join(' - ').trim() || clean
+                };
+            }
+            return {
+                title: clean || 'Untitled Track',
+                artist: 'Device Library'
+            };
+        }
+
+        // --- Handle Device Song Uploads & Persistent Saving ---
+        async function handleUploadedFiles(fileList) {
+            const files = Array.from(fileList).filter(f => f.type.startsWith('audio/') || /\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(f.name));
+            if (files.length === 0) {
+                showToast('Please choose valid audio files (MP3, WAV, M4A, OGG)', true);
+                return;
+            }
+
+            const targetFolder = state.activeFolderId === 'all'
+                ? (state.folders[0]?.id || 'all')
+                : state.activeFolderId;
+
+            let firstNewId = null;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const { title, artist } = parseAudioFilename(file.name);
+                const id = `song-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+                if (!firstNewId) firstNewId = id;
+
+                const songRecord = {
+                    id,
+                    title,
+                    artist,
+                    folderId: targetFolder,
+                    explicit: false,
+                    favorite: false,
+                    coverDataUrl: generateEditorialCover(title, state.songs.length + i + 1),
+                    audioBlob: file, // Stored directly in IndexedDB for offline persistence
+                    createdAt: Date.now() + i
+                };
+
+                await dbPut(STORE_SONGS, songRecord);
+                state.songs.push(songRecord);
+
+                // If user linked a local directory via File System Access API, write copy there too
+                if (state.localDirectoryHandle) {
+                    try {
+                        const fileHandle = await state.localDirectoryHandle.getFileHandle(file.name, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(file);
+                        await writable.close();
+                    } catch (err) {
+                        console.warn('Local folder copy skipped:', err);
+                    }
+                }
+            }
+
+            renderFolders();
+            renderSongList();
+            if (firstNewId) {
+                loadSongById(firstNewId, true);
+            }
+
+            const folderName = getFolderName(targetFolder);
+            showToast(`Saved ${files.length} song${files.length > 1 ? 's' : ''} to "${folderName}"`);
+        }
+
+        function getFolderName(folderId) {
+            if (folderId === 'all') return 'All Tracks';
+            const found = state.folders.find(f => f.id === folderId);
+            return found ? found.name : 'All Tracks';
+        }
+
+        // --- Filtered Queue Helper ---
+        function getVisibleSongs() {
+            return state.songs.filter(song => {
+                const matchesFolder = state.activeFolderId === 'all' || song.folderId === state.activeFolderId;
+                const q = state.searchQuery.toLowerCase();
+                const matchesQuery = !q || song.title.toLowerCase().includes(q) || song.artist.toLowerCase().includes(q);
+                return matchesFolder && matchesQuery;
+            });
+        }
+
+        // --- Load & Play Specific Track ---
+        function loadSongById(songId, autoPlay = false) {
+            const song = state.songs.find(s => s.id === songId);
+            if (!song) return;
+
+            state.currentSongId = song.id;
+
+            // Revoke previous Blob URL to prevent memory leaks
+            if (state.activeObjectUrl) {
+                URL.revokeObjectURL(state.activeObjectUrl);
+            }
+            state.activeObjectUrl = URL.createObjectURL(song.audioBlob);
+            audio.src = state.activeObjectUrl;
+
+            // Update Frosted Widget Card
+            widgetTitle.textContent = song.title;
+            widgetArtist.textContent = song.artist;
+            widgetCoverImg.src = song.coverDataUrl;
+            vinylLabelImg.src = song.coverDataUrl;
+
+            // Explicit / Favorite states
+            toggleExplicitBtn.classList.toggle('bg-white/35', !!song.explicit);
+            toggleExplicitBtn.classList.toggle('opacity-45', !song.explicit);
+            favStarIcon.className = song.favorite ? 'fa-solid fa-star text-white' : 'fa-regular fa-star text-white/60';
+
+            // Update Editorial Strip & Folder Selector
+            stripTrackLabel.textContent = `${song.title} • ${song.artist}`;
+            assignFolderSelect.value = song.folderId || 'all';
+
+            renderSongList();
+            renderSpineDots();
+
+            if (autoPlay) {
+                playAudio();
+            } else {
+                updatePlaybackUI(false);
+            }
+        }
+
+        function playAudio() {
+            if (!audio.src && state.songs.length > 0) {
+                loadSongById(state.songs[0].id, true);
+                return;
+            }
+            audio.play().then(() => {
+                updatePlaybackUI(true);
+            }).catch(err => {
+                console.warn('Playback interrupted:', err);
+                updatePlaybackUI(false);
+            });
+        }
+
+        function pauseAudio() {
+            audio.pause();
+            updatePlaybackUI(false);
+        }
+
+        function togglePlayPause() {
+            if (state.isPlaying) {
+                pauseAudio();
+            } else {
+                playAudio();
+            }
+        }
+
+        function updatePlaybackUI(playing) {
+            state.isPlaying = playing;
+
+            // Frosted iOS Widget Button
+            if (playing) {
+                widgetPlayIcon.className = 'fa-solid fa-pause text-base';
+                widgetPlayLabel.textContent = 'Pause';
+                playbackStatusText.textContent = 'Playing';
+            } else {
+                widgetPlayIcon.className = 'fa-solid fa-play text-base';
+                widgetPlayLabel.textContent = 'Play';
+                playbackStatusText.textContent = 'Paused';
+            }
+
+            // Vinyl Disc Spin & Tonearm Pivot
+            if (playing) {
+                vinylDisc.classList.add('vinyl-spinning');
+                vinylDisc.classList.remove('vinyl-paused');
+                tonearm.classList.remove('tonearm-resting');
+                tonearm.classList.add('tonearm-engaged');
+                turntableLed.classList.remove('bg-neutral-500');
+                turntableLed.classList.add('bg-emerald-400');
+            } else {
+                vinylDisc.classList.add('vinyl-paused');
+                tonearm.classList.remove('tonearm-engaged');
+                tonearm.classList.add('tonearm-resting');
+                turntableLed.classList.remove('bg-emerald-400');
+                turntableLed.classList.add('bg-neutral-500');
+            }
+        }
+
+        function playNextTrack() {
+            const list = getVisibleSongs();
+            if (list.length === 0) return;
+
+            if (state.isShuffle && list.length > 1) {
+                const others = list.filter(s => s.id !== state.currentSongId);
+                const pick = others[Math.floor(Math.random() * others.length)];
+                loadSongById(pick.id, true);
+                return;
+            }
+
+            const idx = list.findIndex(s => s.id === state.currentSongId);
+            const nextIdx = (idx + 1) % list.length;
+            loadSongById(list[nextIdx].id, true);
+        }
+
+        function playPrevTrack() {
+            if (audio.currentTime > 3) {
+                audio.currentTime = 0;
+                return;
+            }
+            const list = getVisibleSongs();
+            if (list.length === 0) return;
+            const idx = list.findIndex(s => s.id === state.currentSongId);
+            const prevIdx = (idx - 1 + list.length) % list.length;
+            loadSongById(list[prevIdx].id, true);
+        }
+
+        // --- Render Folders Bar & Dropdown ---
+        function renderFolders() {
+            foldersBar.innerHTML = '';
+
+            // "All Tracks" Pill
+            const allCount = state.songs.length;
+            const allBtn = document.createElement('button');
+            allBtn.className = `shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition flex items-center gap-1.5 ${
+                state.activeFolderId === 'all'
+                    ? 'bg-ink text-white shadow-sm'
+                    : 'bg-canvas hover:bg-neutral-200 text-ink border border-black/10'
+            }`;
+            allBtn.innerHTML = `<span>All Tracks</span><span class="opacity-65 text-[10px]">(${allCount})</span>`;
+            allBtn.onclick = () => {
+                state.activeFolderId = 'all';
+                activeFolderLabel.textContent = 'Folder / All Tracks';
+                renderFolders();
+                renderSongList();
+                renderSpineDots();
+            };
+            foldersBar.appendChild(allBtn);
+
+            // Custom User Folders
+            state.folders.forEach(folder => {
+                const count = state.songs.filter(s => s.folderId === folder.id).length;
+                const isActive = state.activeFolderId === folder.id;
+
+                const pill = document.createElement('div');
+                pill.className = `shrink-0 rounded-full text-xs font-medium transition flex items-center ${
+                    isActive
+                        ? 'bg-ink text-white shadow-sm'
+                        : 'bg-canvas hover:bg-neutral-200 text-ink border border-black/10'
+                }`;
+
+                const selectBtn = document.createElement('button');
+                selectBtn.className = 'pl-3.5 pr-2 py-1.5 flex items-center gap-1.5';
+                selectBtn.innerHTML = `<i class="fa-regular fa-folder text-[10px]"></i><span>${folder.name}</span><span class="opacity-65 text-[10px]">(${count})</span>`;
+                selectBtn.onclick = () => {
+                    state.activeFolderId = folder.id;
+                    activeFolderLabel.textContent = `Folder / ${folder.name}`;
+                    renderFolders();
+                    renderSongList();
+                    renderSpineDots();
+                };
+                pill.appendChild(selectBtn);
+
+                // Delete custom folder button
+                const delBtn = document.createElement('button');
+                delBtn.className = 'pr-2.5 pl-1 py-1.5 opacity-60 hover:opacity-100 text-[10px]';
+                delBtn.title = `Remove "${folder.name}" folder`;
+                delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                delBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    await deleteCustomFolder(folder.id);
+                };
+                pill.appendChild(delBtn);
+
+                foldersBar.appendChild(pill);
+            });
+
+            // Sync "Save to" Dropdown
+            const currentSong = state.songs.find(s => s.id === state.currentSongId);
+            assignFolderSelect.innerHTML = `<option value="all">Unassigned (All)</option>`;
+            state.folders.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.id;
+                opt.textContent = f.name;
+                assignFolderSelect.appendChild(opt);
+            });
+            if (currentSong) {
+                assignFolderSelect.value = currentSong.folderId || 'all';
+            }
+        }
+
+        async function deleteCustomFolder(folderId) {
+            await dbDelete(STORE_FOLDERS, folderId);
+            state.folders = state.folders.filter(f => f.id !== folderId);
+
+            // Reassign songs in deleted folder back to 'all'
+            for (const song of state.songs) {
+                if (song.folderId === folderId) {
+                    song.folderId = 'all';
+                    await dbPut(STORE_SONGS, song);
+                }
+            }
+
+            if (state.activeFolderId === folderId) {
+                state.activeFolderId = 'all';
+                activeFolderLabel.textContent = 'Folder / All Tracks';
+            }
+
+            renderFolders();
+            renderSongList();
+            showToast('Custom folder removed; tracks kept in All Tracks');
+        }
+
+        // --- Render Song List inside Active Folder ---
+        function renderSongList() {
+            const visible = getVisibleSongs();
+            songListEl.innerHTML = '';
+
+            const currentIdx = visible.findIndex(s => s.id === state.currentSongId);
+            queueCounter.textContent = visible.length > 0
+                ? `${currentIdx >= 0 ? currentIdx + 1 : 1} / ${visible.length}`
+                : '0 / 0';
+
+            if (visible.length === 0) {
+                songListEl.innerHTML = `
+                    <div class="py-8 text-center text-xs text-ash">
+                        <p class="font-medium text-ink mb-1">No tracks in this folder yet</p>
+                        <p>Click <b>Upload Songs</b> above or drag audio files anywhere on screen.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            visible.forEach((song, idx) => {
+                const isCurrent = song.id === state.currentSongId;
+                const row = document.createElement('div');
+                row.className = `py-2.5 px-2.5 rounded-xl flex items-center justify-between gap-3 transition cursor-pointer ${
+                    isCurrent ? 'bg-canvas font-semibold' : 'hover:bg-neutral-50'
+                }`;
+
+                row.onclick = () => {
+                    if (isCurrent) {
+                        togglePlayPause();
+                    } else {
+                        loadSongById(song.id, true);
+                    }
+                };
+
+                // Left: Thumbnail + Track Info
+                const left = document.createElement('div');
+                left.className = 'flex items-center gap-3 min-w-0 flex-1';
+                left.innerHTML = `
+                    <div class="w-9 h-9 rounded-lg overflow-hidden bg-neutral-200 shrink-0 relative border border-black/10">
+                        <img src="${song.coverDataUrl}" alt="" class="w-full h-full object-cover">
+                        ${isCurrent && state.isPlaying ? '<div class="absolute inset-0 bg-black/45 flex items-center justify-center text-white text-[10px]"><i class="fa-solid fa-volume-high"></i></div>' : ''}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="text-xs text-ink truncate flex items-center gap-1.5">
+                            <span>${String(idx + 1).padStart(2, '0')}. ${song.title}</span>
+                            ${song.favorite ? '<i class="fa-solid fa-star text-[9px] text-ink"></i>' : ''}
+                        </div>
+                        <div class="text-[11px] text-ash font-normal truncate">${song.artist} • <span class="text-ink/70">${getFolderName(song.folderId)}</span></div>
+                    </div>
+                `;
+
+                // Right: Move Folder Quick Select + Delete Track
+                const right = document.createElement('div');
+                right.className = 'flex items-center gap-1.5 shrink-0';
+                right.onclick = (e) => e.stopPropagation();
+
+                const moveSelect = document.createElement('select');
+                moveSelect.title = 'Move song to folder';
+                moveSelect.className = 'bg-white border border-black/15 rounded-full px-2 py-0.5 text-[10px] text-ash hover:text-ink outline-none cursor-pointer max-w-[95px]';
+                moveSelect.innerHTML = `<option value="all">All Tracks</option>` +
+                    state.folders.map(f => `<option value="${f.id}" ${song.folderId === f.id ? 'selected' : ''}>${f.name}</option>`).join('');
+                moveSelect.onchange = async (e) => {
+                    song.folderId = e.target.value;
+                    await dbPut(STORE_SONGS, song);
+                    if (song.id === state.currentSongId) {
+                        assignFolderSelect.value = song.folderId;
+                    }
+                    renderFolders();
+                    renderSongList();
+                    renderSpineDots();
+                    showToast(`Moved to "${getFolderName(song.folderId)}"`);
+                };
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'w-6 h-6 rounded-full hover:bg-red-50 text-ash hover:text-red-600 flex items-center justify-center text-[11px] transition';
+                delBtn.title = 'Delete song from vault';
+                delBtn.innerHTML = '<i class="fa-regular fa-trash-can"></i>';
+                delBtn.onclick = async () => {
+                    await dbDelete(STORE_SONGS, song.id);
+                    state.songs = state.songs.filter(s => s.id !== song.id);
+                    if (state.currentSongId === song.id) {
+                        pauseAudio();
+                        if (state.songs.length > 0) {
+                            loadSongById(state.songs[0].id, false);
+                        }
+                    }
+                    renderFolders();
+                    renderSongList();
+                    renderSpineDots();
+                    showToast('Removed track from vault');
+                };
+
+                right.appendChild(moveSelect);
+                right.appendChild(delBtn);
+
+                row.appendChild(left);
+                row.appendChild(right);
+                songListEl.appendChild(row);
+            });
+        }
+
+        // --- Render Center Vertical Spine Dots (Inspired by Image 2) ---
+        function renderSpineDots() {
+            const visible = getVisibleSongs();
+            spineDotsContainer.innerHTML = '';
+
+            visible.forEach((song) => {
+                const isCurrent = song.id === state.currentSongId;
+                const dot = document.createElement('button');
+                dot.title = `${song.title} — ${song.artist}`;
+                dot.className = `rounded-full transition-all ${
+                    isCurrent
+                        ? 'w-3 h-3 bg-ink scale-110 shadow-sm'
+                        : 'w-2.5 h-2.5 bg-gradient-to-b from-neutral-400 to-neutral-700 opacity-55 hover:opacity-100'
+                }`;
+                dot.onclick = () => loadSongById(song.id, true);
+                spineDotsContainer.appendChild(dot);
+            });
+        }
+
+        // --- Time Formatting Helper ---
+        function formatTime(sec) {
+            if (!Number.isFinite(sec) || sec < 0) return '0:00';
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        // --- Event Listeners ---
+        widgetPlayBtn.addEventListener('click', togglePlayPause);
+        vinylDisc.addEventListener('click', togglePlayPause);
+        prevBtn.addEventListener('click', playPrevTrack);
+        nextBtn.addEventListener('click', playNextTrack);
+        document.getElementById('spine-up-btn').addEventListener('click', playPrevTrack);
+        document.getElementById('spine-down-btn').addEventListener('click', playNextTrack);
+
+        shuffleBtn.addEventListener('click', () => {
+            state.isShuffle = !state.isShuffle;
+            shuffleBtn.classList.toggle('bg-ink', state.isShuffle);
+            shuffleBtn.classList.toggle('text-white', state.isShuffle);
+            shuffleBtn.classList.toggle('bg-white', !state.isShuffle);
+            shuffleBtn.classList.toggle('text-ash', !state.isShuffle);
+            showToast(state.isShuffle ? 'Shuffle enabled' : 'Shuffle off');
+        });
+
+        repeatBtn.addEventListener('click', () => {
+            const modes = ['all', 'one', 'off'];
+            state.repeatMode = modes[(modes.indexOf(state.repeatMode) + 1) % modes.length];
+            audio.loop = state.repeatMode === 'one';
+            const active = state.repeatMode !== 'off';
+            repeatBtn.classList.toggle('bg-ink', active);
+            repeatBtn.classList.toggle('text-white', active);
+            repeatBtn.classList.toggle('bg-white', !active);
+            repeatBtn.classList.toggle('text-ash', !active);
+            showToast(`Repeat: ${state.repeatMode.toUpperCase()}`);
+        });
+
+        // Audio Progress & End Handling
+        audio.addEventListener('timeupdate', () => {
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            if (audio.duration) {
+                totalDurationEl.textContent = formatTime(audio.duration);
+                seekSlider.value = (audio.currentTime / audio.duration) * 100;
+            }
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            totalDurationEl.textContent = formatTime(audio.duration);
+        });
+
+        audio.addEventListener('ended', () => {
+            if (state.repeatMode === 'one') {
+                audio.currentTime = 0;
+                playAudio();
+            } else if (state.repeatMode === 'all') {
+                playNextTrack();
+            } else {
+                updatePlaybackUI(false);
+            }
+        });
+
+        seekSlider.addEventListener('input', (e) => {
+            if (audio.duration) {
+                audio.currentTime = (Number(e.target.value) / 100) * audio.duration;
+            }
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            audio.volume = Number(e.target.value);
+            volumeIcon.className = audio.volume === 0 ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        });
+
+        muteBtn.addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            volumeIcon.className = audio.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+        });
+
+        // Widget Tag & Star Toggles (Persisted in IndexedDB)
+        toggleExplicitBtn.addEventListener('click', async () => {
+            const song = state.songs.find(s => s.id === state.currentSongId);
+            if (!song) return;
+            song.explicit = !song.explicit;
+            await dbPut(STORE_SONGS, song);
+            toggleExplicitBtn.classList.toggle('bg-white/35', song.explicit);
+            toggleExplicitBtn.classList.toggle('opacity-45', !song.explicit);
+        });
+
+        toggleFavBtn.addEventListener('click', async () => {
+            const song = state.songs.find(s => s.id === state.currentSongId);
+            if (!song) return;
+            song.favorite = !song.favorite;
+            await dbPut(STORE_SONGS, song);
+            favStarIcon.className = song.favorite ? 'fa-solid fa-star text-white' : 'fa-regular fa-star text-white/60';
+            renderSongList();
+            showToast(song.favorite ? 'Added to favorites' : 'Removed from favorites');
+        });
+
+        // Assign Current Song to Folder
+        assignFolderSelect.addEventListener('change', async (e) => {
+            const song = state.songs.find(s => s.id === state.currentSongId);
+            if (!song) return;
+            song.folderId = e.target.value;
+            await dbPut(STORE_SONGS, song);
+            renderFolders();
+            renderSongList();
+            showToast(`Saved track in "${getFolderName(song.folderId)}"`);
+        });
+
+        // Custom Cover Upload for Current Track
+        document.getElementById('edit-artwork-btn').addEventListener('click', () => coverFileInput.click());
+        coverFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            const song = state.songs.find(s => s.id === state.currentSongId);
+            if (!file || !song) return;
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                song.coverDataUrl = ev.target.result;
+                await dbPut(STORE_SONGS, song);
+                widgetCoverImg.src = song.coverDataUrl;
+                vinylLabelImg.src = song.coverDataUrl;
+                renderSongList();
+                showToast('Updated custom cover artwork');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Create Custom Folder Form
+        newFolderToggleBtn.addEventListener('click', () => {
+            newFolderForm.classList.toggle('hidden');
+            if (!newFolderForm.classList.contains('hidden')) {
+                newFolderInput.focus();
+            }
+        });
+
+        cancelFolderBtn.addEventListener('click', () => {
+            newFolderForm.classList.add('hidden');
+            newFolderInput.value = '';
+        });
+
+        newFolderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = newFolderInput.value.trim();
+            if (!name) return;
+
+            const folder = {
+                id: `folder-${Date.now()}`,
+                name,
+                createdAt: Date.now()
+            };
+            await dbPut(STORE_FOLDERS, folder);
+            state.folders.push(folder);
+            state.activeFolderId = folder.id;
+            activeFolderLabel.textContent = `Folder / ${folder.name}`;
+
+            newFolderInput.value = '';
+            newFolderForm.classList.add('hidden');
+            renderFolders();
+            renderSongList();
+            renderSpineDots();
+            showToast(`Created custom folder "${name}"`);
+        });
+
+        // Search Filter
+        searchInput.addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            renderSongList();
+            renderSpineDots();
+        });
+
+        // Upload & Drag-and-Drop
+        audioFileInput.addEventListener('change', (e) => {
+            if (e.target.files?.length) {
+                handleUploadedFiles(e.target.files);
+                e.target.value = '';
+            }
+        });
+
+        window.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.remove('hidden');
+        });
+        window.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        window.addEventListener('dragleave', (e) => {
+            if (e.relatedTarget === null) {
+                dragOverlay.classList.add('hidden');
+            }
+        });
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.add('hidden');
+            if (e.dataTransfer?.files?.length) {
+                handleUploadedFiles(e.dataTransfer.files);
+            }
+        });
+
+        // Optional File System Access API Local Folder Sync
+        syncLocalDirBtn.addEventListener('click', async () => {
+            if ('showDirectoryPicker' in window) {
+                try {
+                    state.localDirectoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+                    showToast(`Linked local folder: ${state.localDirectoryHandle.name}`);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        showToast('Using browser IndexedDB vault storage');
+                    }
+                }
+            } else {
+                showToast('Songs automatically persist in your browser IndexedDB Vault');
+            }
+        });
+
+        // Toggle Library Drawer Visibility
+        toggleDrawerBtn.addEventListener('click', () => {
+            libraryPanel.classList.toggle('hidden');
+        });
+
+        // Download Standalone HTML File Button
+        downloadHtmlBtn.addEventListener('click', () => {
+            try {
+                const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'monopress-vault-music-player.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Downloaded standalone HTML player');
+            } catch (err) {
+                console.error(err);
+                showToast('Could not download HTML file', true);
+            }
+        });
+
+        // Spacebar Play/Pause Shortcut
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                togglePlayPause();
+            }
+        });
+
+        // Start App
+        window.addEventListener('DOMContentLoaded', () => {
+            audio.volume = 0.85;
+            hydrateVault();
+        });
+    </script>
+</body>
+</html>
